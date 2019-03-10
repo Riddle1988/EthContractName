@@ -1,8 +1,12 @@
-﻿using Nethereum.Contracts;
+﻿using Microsoft.CSharp.RuntimeBinder;
+using Nethereum.Contracts;
 using Nethereum.Hex.HexTypes;
 using Nethereum.RPC.Eth.DTOs;
 using Nethereum.Web3;
+using Newtonsoft.Json.Linq;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace EthEventInvestigator
@@ -26,12 +30,14 @@ namespace EthEventInvestigator
         private readonly ContractLoader ContractAbi = null;
         private Web3 Web3 = null;
         private Contract OurContract;
+        private List<String> ListOfContractEvents = new List<String>();
 
         public Tests()
         {
             ContractAbi = ContractLoader.LoadConfiguration(CommandLineParser.AbiJsonFile);
             Web3 = new Web3();
-            OurContract = Web3.Eth.GetContract(ContractLoader.ContractString, CommandLineParser.EthAccount);
+            OurContract = 
+                Web3.Eth.GetContract(ContractLoader.ContractString, CommandLineParser.EthAccount);
         }
 
         /// <summary>
@@ -60,7 +66,8 @@ namespace EthEventInvestigator
 
             
             Boolean check = currentBlockNumber.Value > 0;
-            Reporting.LogToConsole($"Block value:{currentBlockNumber.Value.ToString()}", check, null);
+            Reporting.
+                LogToConsole($"Block value:{currentBlockNumber.Value.ToString()}", check, null);
 
         }
 
@@ -84,7 +91,11 @@ namespace EthEventInvestigator
             {
                 BlockParameter blockParameter = new BlockParameter(blockNumber);
                 var block = 
-                    await Web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(blockParameter);
+                    await Web3
+                    .Eth
+                    .Blocks
+                    .GetBlockWithTransactionsByNumber
+                    .SendRequestAsync(blockParameter);
                 if(block != null)
                 {
                     Transaction[] trans = block.Transactions;
@@ -93,8 +104,12 @@ namespace EthEventInvestigator
                     if (blockNumber % 1000 == 0) Console.Write(".");
                     if (blockNumber % 10000 == 0)
                     {
-                        DateTime blockDateTime = Helpers.UnixTimeStampToDateTime((double)block.Timestamp.Value);
-                        Console.WriteLine(blockNumber.ToString() + " " + txTotalCount.ToString() + " " + blockDateTime.ToString());
+                        DateTime blockDateTime = Helpers.UnixTimeStampToDateTime
+                            ((double)block.Timestamp.Value);
+                        Console.WriteLine
+                            (blockNumber.ToString() 
+                            + " " + txTotalCount.ToString() 
+                            + " " + blockDateTime.ToString());
                     }
                 }
             }
@@ -119,103 +134,187 @@ namespace EthEventInvestigator
         }
 
         /// <summary>
-        /// Get all transactions in the last hour
+        /// Get all transactions in the last hour registered with BidRevealed event
         /// </summary>
         /// <returns></returns>
         [TestCase("BidRevealedEventHistory", "TC004")]
         public async Task BidRevealedEventHistory()
         {
-            HexBigInteger currentBlockNumber = await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
-            //await GetContractValuesHistoryUniqueOffsetValueExample(Web3, CommandLineParser.EthAccount, currentBlockNumber, 10000, 1000);
 
-            //// Create transfer event handler using our Event definition class
-            //var transferEventHandler = Web3.Eth.GetEvent<BidRevealedEvent>(CommandLineParser.EthAccount);
-
-            //// Create a filter for logs in this case from block 5000 to the latest
-            //HexBigInteger currentBlockNumber = await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
-            //HexBigInteger startBlock = new HexBigInteger(currentBlockNumber.Value - 10000);
-            //var filterAllTransferEventsForContract = transferEventHandler.CreateFilterInput
-            //    (
-            //        //new BlockParameter(startBlock),
-            //        //new BlockParameter(currentBlockNumber)
-            //    );
-
-            //// Retrieve logs
-            //var allTransferEventsForContract = await transferEventHandler.GetAllChanges(filterAllTransferEventsForContract);
-
-            //foreach(var element in allTransferEventsForContract)
-            //{
-            //    Console.WriteLine(element.Log.Address);
-            //}
-
-            //var newMessageEvent = OurContract.GetEvent("BidRevealed");
-            //var filterAllNewMessageEvent = await newMessageEvent.CreateFilterAsync(/*fromAddress*/);
-            //var logNewMessageEvents = await newMessageEvent.GetAllChanges<BidRevealedEvent>(filterAllNewMessageEvent);
-            //foreach (var mea in logNewMessageEvents)
-            //{
-            //    Console.WriteLine("newMessageEvent:\t" +
-            //        mea.Event.Owner + " " + mea.Event.Hash.ToString() + " " + mea.Event.Value.ToString());
-            //}
-
-            //DateTime twoDaysBefore = DateTime.Now.AddHours(-2);
-            //DateTime latestBlockTime = DateTime.Now;
+            DateTime twoDaysBefore = DateTime.Now.AddHours(-1);
+            DateTime latestBlockTime = DateTime.Now;
 
 
-            //Event contractEvent = OurContract.GetEvent("BidRevealed");
-            ////Event<BidRevealedEvent> contractEvent = OurContract.GetEvent<BidRevealedEvent>(CommandLineParser.EthAccount);
-            //HexBigInteger currentBlockNumber = await Web3.Eth.Blocks.GetBlockNumber.SendRequestAsync();
-            //BlockWithTransactions block = null;
-            //Int32 position = 0;
-            //while (twoDaysBefore < latestBlockTime)
-            //{
-            //    block = await Web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync
-            //        (new HexBigInteger(currentBlockNumber.Value - position));
-            //    latestBlockTime = Helpers.UnixTimeStampToDateTime((double)block.Timestamp.Value);
-            //    position++;
-            //}
+            Event contractEvent = OurContract.GetEvent("BidRevealed");
+            HexBigInteger currentBlockNumber = await Web3
+                .Eth
+                .Blocks
+                .GetBlockNumber
+                .SendRequestAsync();
+            BlockWithTransactions block = null;
+            Int32 position = 0;
+            while (twoDaysBefore < latestBlockTime)
+            {
+                block = await Web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync
+                    (new HexBigInteger(currentBlockNumber.Value - position));
+                latestBlockTime = Helpers.UnixTimeStampToDateTime((double)block.Timestamp.Value);
+                position++;
+            }
 
-            //if (block != null)
-            //{
+            if (block != null)
+            {
 
-            //    HexBigInteger filterAll2 = await contractEvent.CreateFilterBlockRangeAsync
-            //        (
-            //            new BlockParameter(block.Number),
-            //            new BlockParameter(currentBlockNumber)
-            //        );
+                HexBigInteger filterAll2 = await contractEvent.CreateFilterBlockRangeAsync
+                    (
+                        new BlockParameter(block.Number),
+                        new BlockParameter(currentBlockNumber)
+                    );
+                try
+                {
+                    var allLogs = await contractEvent.GetAllChanges<BidRevealedEvent>(filterAll2);
 
+                    Int32 number = 0;
+                    foreach (var log in allLogs)
+                    {
+                        number++;
+                        Console.WriteLine($"{number}) This is the log class {log.ToString()}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex.ToString());
+                }
+            }
+        }
 
-            //var filterAll =
-            //    OurContract.GetDefaultFilterInput
-            //        (
-            //          new BlockParameter(currentBlockNumber)
-            //        , new BlockParameter(block.Number)
-            //        );
-            //filterAll.Wait();
-            //try
-            //{
-            //    var logs = await contractEvent.GetAllChanges<BidRevealedEvent>(filterAll2);
+        /// <summary>
+        /// Grab Balance from Ethereum foundation
+        /// </summary>
+        /// <returns></returns>
+        [TestCase("GrabBalance", "TC005")]
+        public async Task GrabBalance()
+        {
+            var web3 = new Web3("https://api.myetherapi.com/eth");
 
-            //    Int32 number = 0;
-            //    foreach (var log in logs)
-            //    {
-            //        number++;
-            //        Console.WriteLine($"{number}) This is the log class {log.ToString()}");
-            //    }
-            //}
-            //catch(Exception ex)
-            //{
-            //    Console.WriteLine(ex.ToString());
-            //}
-            //var logs = contractEvent.GetAllChanges(filterAll);
-            //logs.Wait();
-            //}
+            // Ethereum Foundation account
+            var balance = 
+                await web3.Eth.GetBalance.SendRequestAsync
+                ("0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae");
+            Console.WriteLine($"Balance in Wei: {balance.Value}");
 
+            var etherAmount = Web3.Convert.FromWei(balance.Value);
+            Console.WriteLine($"Balance in Ether: {etherAmount}");
+        }
 
-            ////for (int i = 0; i <= 10; i++)
-            ////{
-            ////    var block = await Web3.Eth.Blocks.GetBlockWithTransactionsByNumber.SendRequestAsync(new HexBigInteger(currentBlockNumber.Value - i));
-            ////    searchBlocks.Add(block);
-            ////}
+        /// <summary>
+        /// Check Json ABI and print all events
+        /// </summary>
+        /// <returns></returns>
+        [TestCase("PrintAllContractEvents", "TC006")]
+        public async Task PrintEvents()
+        {
+            JArray abi = ContractLoader.ContractJson;
+            foreach (dynamic element in abi)
+            {
+                try
+                {
+                    if (element.type == "event")
+                    {
+                        Console.WriteLine($" Event: -> {element.name}");
+                        ListOfContractEvents.Add(element.name);
+                    }
+                }
+                catch (RuntimeBinderException ex)
+                {
+                    /*empty*/
+                    // TODO: It wold be faster with reflection
+                }
+            }
+
+            await Task.Yield();
+        }
+
+        /// <summary>
+        /// Grab all changes for this contract it could be a large amount
+        /// </summary>
+        /// <returns></returns>
+        [TestCase("AllChanges", "TC007")]
+        public async Task AllChanges()
+        {
+            Event newMessageEvent = OurContract.GetEvent("BidRevealed");
+            HexBigInteger filterAllNewMessageEvent = await newMessageEvent.CreateFilterAsync();
+            var logNewMessageEvents = await newMessageEvent
+                .GetAllChanges<BidRevealedEvent>(filterAllNewMessageEvent);
+            foreach (var mea in logNewMessageEvents)
+            {
+                Console.WriteLine
+                    ("newMessageEvent:\t" +
+                    mea.Event.Owner
+                    + " " + mea.Event.Hash.ToString()
+                    + " " + mea.Event.Value.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Value history on last 20000 blocks
+        /// </summary>
+        /// <returns></returns>
+        [TestCase("ContractValuesHistory", "TC008")]
+        public async Task ContractValuesHistory()
+        {
+            HexBigInteger recentBlockNumber = await Web3
+                .Eth
+                .Blocks
+                .GetBlockNumber
+                .SendRequestAsync();
+            ulong numberBlocks = 20000;
+            int offset = 5000;
+
+            String previousValue = "";
+            for 
+                (ulong blockNumber = (ulong)recentBlockNumber.Value
+                ; blockNumber > (ulong)recentBlockNumber.Value - numberBlocks;
+                blockNumber--)
+            {
+                var blockNumberParameter = new BlockParameter(blockNumber);
+                var valueAtOffset = await Web3
+                    .Eth
+                    .GetStorageAt
+                    .SendRequestAsync
+                        (CommandLineParser.EthAccount
+                        , new HexBigInteger(offset)
+                        , blockNumberParameter);
+
+                if (valueAtOffset != previousValue)
+                {
+                    var block = await Web3
+                        .Eth
+                        .Blocks
+                        .GetBlockWithTransactionsByNumber
+                        .SendRequestAsync(blockNumberParameter);
+                    DateTime blockDateTime = 
+                        Helpers.UnixTimeStampToDateTime((double)block.Timestamp.Value);
+
+                    Console.WriteLine("blockDateTime:\t" + blockDateTime.ToString());
+
+                    for (int storageOffset = 0; storageOffset < offset + 2; storageOffset++)
+                    {
+                        var valueAt = await Web3
+                            .Eth
+                            .GetStorageAt
+                            .SendRequestAsync
+                                (CommandLineParser.EthAccount
+                                , new HexBigInteger(storageOffset)
+                                , blockNumberParameter);
+
+                        Console.WriteLine("value:\t" + blockNumber.ToString() 
+                            + " " + storageOffset.ToString() 
+                            + " " + valueAt 
+                            + " " + Helpers.ConvertHex(valueAt.Substring(2)));
+                    }
+                    previousValue = valueAtOffset;
+                }
+            }
         }
     }
 }

@@ -17,7 +17,11 @@ namespace EthEventInvestigator
             { "GetCurrentBlockNumber", "TC001" },
             { "BlockIteration", "TC002" },
             { "BidRevealedEvent", "TC003" },
-            { "BidRevealedEventHistory", "TC004" }
+            { "BidRevealedEventHistory", "TC004" },
+            { "GrabBalance", "TC005" },
+            { "PrintAllContractEvents", "TC006" },
+            { "AllChanges", "TC007" },
+            { "ContractValuesHistory", "TC008" },
         };
     }
 }

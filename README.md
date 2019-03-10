@@ -1,8 +1,9 @@
 # EthContractName
-CLI tool that can visualize contract events on the ETH network for checking the logs
+CLI tool that access etherium network and with a given abi and address searches for specific event and runs some specific test cases
 
 ### Preconditions for running:
 - .NET Framework 4.5.2
+- synced etherium client (e.g. parity) running a node
 
 ### Preconditions for building:
 - Developed with VS2015 so either that or MSBuild Xbuild or something that can build targeted framework .NET 4.5.2
@@ -34,31 +35,5 @@ Provided .json file will be searched form the run directory, by default
 ### Status and TODOs
 Current status: not fully working needs more work
 
-
-##### 1. Iterate and grab all events from the contract
-Ideas: Iterate the ABI JArray and find all JObject.type=event. 
-It should be possible to make a generic method and using the reflection make an "TEvent" object of all Event object and than call them.
-Or easier approach but with less "power" is just to grab names and list them.
-
-##### 2. BlockIteration test FIX
-Ideas: For some reason it seems block cannot be assigned and RPC call either returns null or has some timeouts/exceptions.
-Read documentation of nethereum more :)
-
-##### 3. BidRevealedEventHistory needs a proper way to work
-Ideas: Well at this point no idea what is wrong with multiple approaches, could be that something with test setup is wrong
-since used parity was only synced with --light at first, but after the normal sync different problems are there.
-Tryesd so far:
-
-###### Algoritham one:
-1. Get current block
-2. iterate on the blocks until different between loopBlock and currentBlock time stamp is 2days
-3. Create a filter with this block difference
-4. grab all event logs from the past two days
-Issue: no event log returned
-
-###### Algoritham two:
-Similar to one but use eventhandler instead
-
-###### Algoritham three:
-Couple of brute force attempts also tried but no luck :)
+Also needs additional verification with properly synced eth node
 
